@@ -1,63 +1,81 @@
 package com.collett.github.modeladapter;
 
 import com.collett.github.model.SearchResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static java.util.Objects.requireNonNull;
 
 public final class JacksonSearchResponseAdapter implements SearchResponseAdapter {
-  private final ObjectMapper objectMapper;
+  private final ObjectMapper mapper;
+  private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper()
+      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+      .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
 
-  public JacksonSearchResponseAdapter(final ObjectMapper objectMapper) {
-    this.objectMapper = requireNonNull(objectMapper);
+  public JacksonSearchResponseAdapter(final ObjectMapper mapper) {
+    this.mapper = requireNonNull(mapper);
   }
 
   public JacksonSearchResponseAdapter() {
-    this(new ObjectMapper());
+    this(DEFAULT_MAPPER);
   }
 
-  public SearchResponse adapt(final String jsonResponse) throws IOException {
-    requireNonNull(jsonResponse, "jsonResponse");
-    final JsonNode root = this.objectMapper.readTree(jsonResponse);
-    int totalCount = root.get("total_count").asInt();
-    final List<SearchResponse.SearchItem> items = StreamSupport
-        .stream(root.get("items").spliterator(), false)
-        .map(JacksonSearchResponseAdapter::toSearchItem)
+  @Override
+  public SearchResponse adapt(String json) throws IOException {
+    requireNonNull(json);
+    try {
+      final JsonNode root = mapper.readTree(json);
+      return new SearchResponse(
+          root.path("total_count").asInt(),
+          items(root.path("items"))
+      );
+    } catch (final JsonProcessingException e) {
+      throw new IOException("Failed to parse response", e);
+    }
+  }
+
+  private List<SearchResponse.SearchItem> items(final JsonNode items) {
+    requireNonNull(items, "items");
+    if (!items.isArray()) {
+      return Collections.emptyList();
+    }
+    return StreamSupport.stream(items.spliterator(), false)
+        .map(this::item)
         .collect(Collectors.toList());
-    return new SearchResponse(totalCount, items);
   }
 
-  private static SearchResponse.SearchItem toSearchItem(final JsonNode node) {
+  private SearchResponse.SearchItem item(final JsonNode node) {
     requireNonNull(node, "node");
     return new SearchResponse.SearchItem(
-        node.get("name").asText(),
-        node.get("full_name").asText(),
-        node.get("description").asText(null),
-        node.get("html_url").asText(""),
-        node.get("stargazers_count").asInt(),
-        node.get("owner").get("login").asText(""),
-        node.get("visibility").asText(null),
-        node.get("created_at").asText(),
-        node.get("updated_at").asText(),
-        node.get("archived").asBoolean(),
-        node.get("fork").asBoolean(),
-        Optional.ofNullable(node.get("topics"))
-            .map(JacksonSearchResponseAdapter::resolveTopics)
-            .orElse(Collections.emptyList())
+        node.path("name").asText(),
+        node.path("full_name").asText(),
+        node.path("description").asText(null),
+        node.path("html_url").asText(),
+        node.path("stargazers_count").asInt(),
+        node.path("owner").path("login").asText(),
+        node.path("visibility").asText(null),
+        node.path("created_at").asText(),
+        node.path("updated_at").asText(),
+        node.path("archived").asBoolean(),
+        node.path("fork").asBoolean(),
+        topics(node.path("topics"))
     );
   }
 
-  private static List<String> resolveTopics(final JsonNode node) {
-    requireNonNull(node, "node");
-    return StreamSupport.stream(node.spliterator(), false)
+  private List<String> topics(final JsonNode topics) {
+    requireNonNull(topics, "topics");
+    if (!topics.isArray()) {
+      return Collections.emptyList();
+    }
+    return StreamSupport.stream(topics.spliterator(), false)
         .map(JsonNode::asText)
         .collect(Collectors.toList());
   }

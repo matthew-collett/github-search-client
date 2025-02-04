@@ -1,0 +1,17 @@
+{
+  "total_count": 1,
+  "items": [{
+    "name": "test-repo",
+    "full_name": "octocat/test-repo",
+    "description": "Test repository",
+    "html_url": "https://api.github.com/repos/octocat/test-repo",
+    "stargazers_count": 100,
+    "owner": {"login": "octocat"},
+    "visibility": "public",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-02T00:00:00Z",
+    "archived": false,
+    "fork": false,
+    "topics": ["test"]
+  }]
+}
