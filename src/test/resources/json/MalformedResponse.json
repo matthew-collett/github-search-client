@@ -1,7 +1,0 @@
-{
-  "total_count": 1,
-  "items": [{
-    "name": "test-repo",
-    "missing_required_field": true
-  }]
-}
