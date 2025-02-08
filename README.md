@@ -54,8 +54,7 @@ In summary, Builder focuses on flexible object creation, while Singleton control
 - Highlight any **challenges you faced** and how you solved them.
 - The video can be recorded using **Teams** or **Streams.**
 
-
-
+[Video Link](https://youtu.be/-XEJhDkSafM)
 
 
 
