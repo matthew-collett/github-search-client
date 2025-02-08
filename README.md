@@ -45,7 +45,7 @@ In summary, Builder focuses on flexible object creation, while Singleton control
 - Create a UML **class diagram or sequence diagram** representing your implementation.
 - Include annotations or brief notes explaining key relationships and decisions.
 
-![uml.png](docs/uml.png)
+<img src="docs/uml.jpg" alt="UML Diagram" width="600"/>
 
 ## Part 4
 **Upload a video explanation (Max 5 Minutes):**
